@@ -3,6 +3,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Sidebar from './components/Sidebar';
+import ChatWidget from './components/ChatWidget';
 
 function App() {
   const [activeSection, setActiveSection] = useState('farmer');
@@ -23,6 +24,7 @@ function App() {
             <Admin active={activeSection === 'admin'} />
           </main> */}
         </div>
+        <ChatWidget />
       </div>
     </Router>
   );
