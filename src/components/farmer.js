@@ -10,6 +10,12 @@ const farmer = ({active}) => {
           <input type="text" placeholder="RICE-2025-1001"
                  className="w-full border rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-green-400" />
         </div>
+
+           <div>
+          <label className="block text-gray-700 font-semibold">Certificate ID</label>
+          <input type="text" placeholder="CERT-2025-1235"
+                 className="w-full border rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-green-400" />
+        </div>
         </form> 
     </section>
   )
