@@ -53,4 +53,9 @@ contract SupplyChain is AccessControl {
     mapping(uint256 => Batch) public batches;
     mapping(string => uint256) public batchIdToIndex;
 
+      event BatchCreated(uint256 indexed batchId, address indexed farmer, string batchIdentifier);
+    event BatchTransit(uint256 indexed batchId, address indexed from, address indexed distributor);
+    event Processed(uint256 indexed batchId, address indexed distributor);
+    event BatchPackaged(uint256 indexed batchId,address indexed retailer);
+
 }
