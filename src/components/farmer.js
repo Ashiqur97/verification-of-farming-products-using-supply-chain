@@ -44,10 +44,6 @@ const Farmer = ({ active }) => {
                  className="w-full border rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-green-400" />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-gray-700 font-semibold">Upload Certificate</label>
-          <input type="file" className="w-full border rounded-lg px-4 py-2 mt-1" />
-        </div>
-        <div className="md:col-span-2">
           <button type="submit"
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg">
             Submit to Blockchain (MetaMask Required)
