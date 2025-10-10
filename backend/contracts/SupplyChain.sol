@@ -1,17 +1,33 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract supplychain is AccessControl {
+contract SupplyChain is AccessControl {
+    // STATE VARIABLES
     uint256 private _batchIds;
-
-    bytes32 public constant FARMER_ROLE = keccak256("FAMER_ROLE");
+    
+    // ROLES
+    bytes32 public constant FARMER_ROLE = keccak256("FARMER_ROLE");
     bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
     bytes32 public constant RETAILER_ROLE = keccak256("RETAILER_ROLE");
     bytes32 public constant CONSUMER_ROLE = keccak256("CONSUMER_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
+    
+    // AGRICULTURE & FOOD CATEGORIES
+    enum Category {
+        FreshProduce,       // fruits, vegetables, herbs
+        GrainsCereals,      // wheat, rice, corn, oats
+        LivestockMeat,      // cattle, poultry, pork, seafood
+        DairyProducts,      // milk, cheese, yogurt, butter
+        ProcessedFoods,     // packaged goods, beverages, snacks
+        OrganicSpecialty,    // gluten-free, vegan, kosher, halal
+        SeedsAgriculturalInputs, // fertilizers, pesticides, equipment
+        CoffeeTea,          // bean/leaf origin to cup
+        SpicesSeasonings    // spices and seasonings
+    }
+    
+    // BATCH STATUS
     enum BatchStatus {
         Created,
         InTransit,
@@ -21,11 +37,13 @@ contract supplychain is AccessControl {
         Sold,
         Recalled
     }
-
+    
+    // BATCH STRUCT
     struct Batch {
         uint256 id;
         string batchId;
         string certificateId;
+        Category category;
         string crop;
         string origin;
         uint256 harvestDate;
@@ -48,13 +66,13 @@ contract supplychain is AccessControl {
         uint256 sellingPrice;
         bool certificationVerified;
     }
-
-
-    mapping (uint256 => Batch) public batches;
-    mapping (string => uint256) public batchIdToIndex;
-
-       // Events - each on separate lines with clear spacing
-    event BatchCreated(uint256 indexed batchId, address indexed farmer, string batchIdentifier);
+    
+    // MAPPINGS
+    mapping(uint256 => Batch) public batches;
+    mapping(string => uint256) public batchIdToIndex;
+    
+    // EVENTS
+    event BatchCreated(uint256 indexed batchId, address indexed farmer, string batchId, Category category);
     event BatchInTransit(uint256 indexed batchId, address indexed distributor);
     event BatchProcessed(uint256 indexed batchId, address indexed distributor);
     event BatchPackaged(uint256 indexed batchId, address indexed retailer);
@@ -65,13 +83,14 @@ contract supplychain is AccessControl {
     event RetailDetailsUpdated(uint256 indexed batchId, uint256 arrivalDate, uint256 stockQuantity, uint256 sellingPrice);
     event CertificationVerified(uint256 indexed batchId, bool verified);
 
-
+    // CONSTRUCTOR
     constructor() {
-        _grantRole(DEFAULT_ADMIN_ROLE,msg.sender);
-        _grantRole(ADMIN_ROLE,msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
     }
-
-      function addFarmer(address account) public onlyRole(ADMIN_ROLE) {
+    
+    // ROLE MANAGEMENT FUNCTIONS
+    function addFarmer(address account) public onlyRole(ADMIN_ROLE) {
         _grantRole(FARMER_ROLE, account);
     }
 
@@ -86,13 +105,15 @@ contract supplychain is AccessControl {
     function addConsumer(address account) public onlyRole(ADMIN_ROLE) {
         _grantRole(CONSUMER_ROLE, account);
     }
-
-    function CreateBatch(
+    
+    // CORE SUPPLY CHAIN FUNCTIONS
+    function createBatch(
         string memory _batchId,
         string memory _certificateId,
+        Category _category,
         string memory _crop,
         string memory _origin,
-        uint256  _harvestDate,
+        uint256 _harvestDate,
         string memory _quality,
         uint256 _weight,
         string memory _storageConditions,
@@ -108,8 +129,9 @@ contract supplychain is AccessControl {
             id: newBatchId,
             batchId: _batchId,
             certificateId: _certificateId,
-            crop:_crop,
-            origin:_origin,
+            category: _category,
+            crop: _crop,
+            origin: _origin,
             harvestDate: _harvestDate,
             farmer: msg.sender,
             distributor: address(0),
@@ -122,21 +144,20 @@ contract supplychain is AccessControl {
             updatedAt: block.timestamp,
             storageConditions: _storageConditions,
             destination: _destination,
-            farmerName : _farmerName,
+            farmerName: _farmerName,
             retailerName: "",
-            packagingDate:0,
-            arrivalDate:0,
-            stockQuantity:0,
-            sellingPrice:0,
-            certificationVerified:false
+            packagingDate: 0,
+            arrivalDate: 0,
+            stockQuantity: 0,
+            sellingPrice: 0,
+            certificationVerified: false
         });
 
         batchIdToIndex[_batchId] = newBatchId;
-        emit BatchCreated(newBatchId,msg.sender,_batchId);
-
+        emit BatchCreated(newBatchId, msg.sender, _batchId, _category);
     }
 
-     function shipBatch(uint256 _batchId, address _distributor) public onlyRole(FARMER_ROLE) {
+    function shipBatch(uint256 _batchId, address _distributor) public onlyRole(FARMER_ROLE) {
         require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
         require(batches[_batchId].status == BatchStatus.Created, "Batch not in created state");
 
@@ -147,4 +168,12 @@ contract supplychain is AccessControl {
         emit BatchInTransit(_batchId, msg.sender);
     }
 
-}
+    function processBatch(uint256 _batchId) public onlyRole(DISTRIBUTOR_ROLE) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        require(batches[_batchId].status == BatchStatus.InTransit, "Batch not in transit");
+
+        batches[_batchId].status = BatchStatus.Processed;
+        batches[_batchId].updatedAt = block.timestamp;
+
+        emit BatchProcessed(_batchId, msg.sender);
+    }

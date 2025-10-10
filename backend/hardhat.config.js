@@ -1,9 +1,12 @@
-require("@nomicfoundation/hardhat-toolbox");
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+const hardhatToolbox = require("@nomicfoundation/hardhat-toolbox");
 
 /** @type import('hardhat/config').HardhatUserConfig */
-module.exports = {
+const config = {
   solidity: {
-    version: "0.8.28",
+    version: "0.8.20",
     settings: {
       optimizer: {
         enabled: true,
@@ -13,3 +16,5 @@ module.exports = {
     }
   },
 };
+
+export default config;
