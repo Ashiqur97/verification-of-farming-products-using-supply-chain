@@ -2,6 +2,16 @@ import React from 'react';
 import { FaSeedling, FaShieldAlt, FaSearch, FaCertificate } from 'react-icons/fa';
 
 const Hero = () => {
+  const handleExploreCategories = () => {
+    // Find the categories button in the sidebar and click it
+    const categoriesButton = Array.from(document.querySelectorAll('.sidebar-item'))
+      .find(button => button.textContent.includes('Agriculture Categories'));
+    
+    if (categoriesButton) {
+      categoriesButton.click();
+    }
+  };
+
   return (
     <section className="hero-bg text-white py-16 px-6">
       <div className="max-w-6xl mx-auto">
@@ -55,6 +65,18 @@ const Hero = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Quick Link to Agriculture Categories */}
+        <div className="mt-12 text-center">
+          <div className="inline-flex rounded-md shadow">
+            <button 
+              onClick={handleExploreCategories}
+              className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-yellow-400 hover:bg-yellow-500 text-green-900"
+            >
+              Explore Agriculture Categories
+            </button>
           </div>
         </div>
       </div>

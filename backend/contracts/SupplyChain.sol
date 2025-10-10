@@ -53,13 +53,14 @@ contract supplychain is AccessControl {
     mapping (uint256 => Batch) public batches;
     mapping (string => uint256) public batchIdToIndex;
 
+       // Events - each on separate lines with clear spacing
     event BatchCreated(uint256 indexed batchId, address indexed farmer, string batchIdentifier);
-    event BatchTransit(uint256 indexed batchId, address indexed from, address indexed distributor);
-    event Processed(uint256 indexed batchId, address indexed distributor);
-    event BatchPackaged(uint256 indexed batchId,address indexed retailer);
+    event BatchInTransit(uint256 indexed batchId, address indexed distributor);
+    event BatchProcessed(uint256 indexed batchId, address indexed distributor);
+    event BatchPackaged(uint256 indexed batchId, address indexed retailer);
     event BatchForSale(uint256 indexed batchId, address indexed retailer);
-    event BatchForSold(uint256 indexed batchId, address indexed consumer);
-    event BatchRecalled(uint256 indexed batchId,address indexed initiator,string reason);
+    event BatchSold(uint256 indexed batchId, address indexed consumer);
+    event BatchRecalled(uint256 indexed batchId, address indexed initiator, string reason);
     event PackagingDetailsUpdated(uint256 indexed batchId, uint256 packagingDate, string storageConditions);
     event RetailDetailsUpdated(uint256 indexed batchId, uint256 arrivalDate, uint256 stockQuantity, uint256 sellingPrice);
     event CertificationVerified(uint256 indexed batchId, bool verified);
@@ -134,5 +135,16 @@ contract supplychain is AccessControl {
         emit BatchCreated(newBatchId,msg.sender,_batchId);
 
     }
- 
+
+     function shipBatch(uint256 _batchId, address _distributor) public onlyRole(FARMER_ROLE) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        require(batches[_batchId].status == BatchStatus.Created, "Batch not in created state");
+
+        batches[_batchId].distributor = _distributor;
+        batches[_batchId].status = BatchStatus.InTransit;
+        batches[_batchId].updatedAt = block.timestamp;
+
+        emit BatchInTransit(_batchId, msg.sender);
+    }
+
 }

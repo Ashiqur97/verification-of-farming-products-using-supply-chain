@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import Farmer from './components/farmer';
-import Distributor from './components/Distributor';
-import Retailer from './components/Retailer';
-import Consumer from './components/Consumer';
-import History from './components/History';
-import Admin from './components/Admin';
-import ChatWidget from './components/ChatWidget';
+import Sidebar from './components/Sidebar'; // lowercase
+import Header from './components/Header'; // lowercase
+import Hero from './components/Hero'; // lowercase
+import Farmer from './components/farmer'; // lowercase
+import Distributor from './components/Distributor'; // lowercase
+import Retailer from './components/Retailer'; // lowercase
+import Consumer from './components/Consumer'; // lowercase
+import AgricultureCategories from './components/AgricultureCategories'; // This one is correct
+import History from './components/History'; // lowercase
+import Admin from './components/Admin'; // lowercase
+import ChatWidget from './components/ChatWidget'; // This one is correct
 
 function App() {
   const [activeSection, setActiveSection] = useState('farmer');
@@ -24,6 +25,7 @@ function App() {
           <Distributor active={activeSection === 'distributor'} />
           <Retailer active={activeSection === 'retailer'} />
           <Consumer active={activeSection === 'consumer'} />
+          <AgricultureCategories active={activeSection === 'categories'} />
           <History active={activeSection === 'history'} />
           <Admin active={activeSection === 'admin'} />
         </main>

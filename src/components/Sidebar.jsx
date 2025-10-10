@@ -6,6 +6,7 @@ const Sidebar = ({ activeSection, setActiveSection }) => {
     { id: 'distributor', label: '🚚 Distributor' },
     { id: 'retailer', label: '🏬 Retailer' },
     { id: 'consumer', label: '🛒 Consumer' },
+    { id: 'categories', label: '🌾 Agriculture Categories' },
     { id: 'history', label: '📜 History' },
     { id: 'admin', label: '⚙️ Admin' },
   ];
