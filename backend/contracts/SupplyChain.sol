@@ -177,4 +177,49 @@ contract SupplyChain is AccessControl {
 
         emit BatchProcessed(_batchId, msg.sender);
     }
+
+    function updatePackagingDetails(
+        uint256 _batchId,
+        uint256 _packagingDate,
+        string memory _storageConditions
+    ) public onlyRole(DISTRIBUTOR_ROLE) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        require(batches[_batchId].status == BatchStatus.Processed, "Batch not in processed state");
+
+        batches[_batchId].packagingDate = _packagingDate;
+        batches[_batchId].storageConditions = _storageConditions;
+        batches[_batchId].updatedAt = block.timestamp;
+        
+        emit PackagingDetailsUpdated(_batchId, _packagingDate, _storageConditions);
+    }
+
+    function packageBatch(uint256 _batchId, address _retailer) public onlyRole(DISTRIBUTOR_ROLE) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        require(batches[_batchId].status == BatchStatus.Processed, "Batch not in processed state");
+
+        batches[_batchId].retailer = _retailer;
+        batches[_batchId].status = BatchStatus.Packaged;
+        batches[_batchId].updatedAt = block.timestamp;
+
+        emit BatchPackaged(_batchId, msg.sender);
+    }
+
+    function updateRetailDetails(
+        uint256 _batchId,
+        uint256 _arrivalDate,
+        uint256 _stockQuantity,
+        uint256 _sellingPrice,
+        string memory _retailerName
+    ) public onlyRole(RETAILER_ROLE) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        require(batches[_batchId].retailer == msg.sender, "Not the designated retailer");
+
+        batches[_batchId].arrivalDate = _arrivalDate;
+        batches[_batchId].stockQuantity = _stockQuantity;
+        batches[_batchId].sellingPrice = _sellingPrice;
+        batches[_batchId].retailerName = _retailerName;
+        batches[_batchId].updatedAt = block.timestamp;
+
+        emit RetailDetailsUpdated(_batchId, _arrivalDate, _stockQuantity, _sellingPrice);
+    }
 }
