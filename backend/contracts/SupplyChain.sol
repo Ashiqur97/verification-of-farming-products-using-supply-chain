@@ -72,7 +72,7 @@ contract SupplyChain is AccessControl {
     mapping(string => uint256) public batchIdToIndex;
     
     // EVENTS
-    event BatchCreated(uint256 indexed batchId, address indexed farmer, string batchId, Category category);
+    event BatchCreated(uint256 indexed batchId, address indexed farmer, string batchIdString, Category category);
     event BatchInTransit(uint256 indexed batchId, address indexed distributor);
     event BatchProcessed(uint256 indexed batchId, address indexed distributor);
     event BatchPackaged(uint256 indexed batchId, address indexed retailer);
@@ -177,3 +177,4 @@ contract SupplyChain is AccessControl {
 
         emit BatchProcessed(_batchId, msg.sender);
     }
+}
