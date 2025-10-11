@@ -222,4 +222,100 @@ contract SupplyChain is AccessControl {
 
         emit RetailDetailsUpdated(_batchId, _arrivalDate, _stockQuantity, _sellingPrice);
     }
+
+  function putForSale(uint256 _batchId) public onlyRole(RETAILER_ROLE) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        require(batches[_batchId].status == BatchStatus.Packaged, "Batch not in packaged state");
+        require(batches[_batchId].retailer == msg.sender, "Not the designated retailer");
+
+        batches[_batchId].status = BatchStatus.ForSale;
+        batches[_batchId].updatedAt = block.timestamp;
+
+        emit BatchForSale(_batchId, msg.sender);
+    }
+
+    function sellBatch(uint256 _batchId, address _consumer) public onlyRole(RETAILER_ROLE) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        require(batches[_batchId].status == BatchStatus.ForSale, "Batch not for sale");
+        require(batches[_batchId].retailer == msg.sender, "Not the designated retailer");
+
+        batches[_batchId].consumer = _consumer;
+        batches[_batchId].status = BatchStatus.Sold;
+        batches[_batchId].updatedAt = block.timestamp;
+
+        emit BatchSold(_batchId, msg.sender);
+    }
+
+     // ADMIN & VERIFICATION FUNCTIONS
+    function verifyCertification(uint256 _batchId, bool _verified) public onlyRole(ADMIN_ROLE) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+
+        batches[_batchId].certificationVerified = _verified;
+        batches[_batchId].updatedAt = block.timestamp;
+
+        emit CertificationVerified(_batchId, _verified);
+    }
+
+    function verifyBatch(uint256 _batchId) public view {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+    }
+
+    function recallBatch(uint256 _batchId, string memory _reason) public {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        require(
+            hasRole(FARMER_ROLE, msg.sender) || 
+            hasRole(DISTRIBUTOR_ROLE, msg.sender) || 
+            hasRole(RETAILER_ROLE, msg.sender) || 
+            hasRole(ADMIN_ROLE, msg.sender),
+            "Not authorized to recall"
+        );
+
+        batches[_batchId].status = BatchStatus.Recalled;
+        batches[_batchId].updatedAt = block.timestamp;
+
+        emit BatchRecalled(_batchId, msg.sender, _reason);
+    }
+
+        // QUERY FUNCTIONS
+    function getBatch(uint256 _batchId) public view returns (Batch memory) {
+        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+        return batches[_batchId];
+    }
+
+    function getBatchCount() public view returns (uint256) {
+        return _batchIds;
+    }
+
+    function getBatchByBatchId(string memory _batchId) public view returns (Batch memory) {
+        uint256 index = batchIdToIndex[_batchId];
+        require(index > 0, "Batch not found");
+        return batches[index];
+    }
+    
+    // CATEGORY QUERY FUNCTION
+    function getBatchesByCategory(Category _category) public view returns (Batch[] memory) {
+        uint256 count = 0;
+        
+        // Count matching batches
+        for (uint256 i = 1; i <= _batchIds; i++) {
+            if (batches[i].category == _category) {
+                count++;
+            }
+        }
+        
+        // Create result array
+        Batch[] memory result = new Batch[](count);
+        uint256 resultIndex = 0;
+        
+        // Fill result array
+        for (uint256 i = 1; i <= _batchIds; i++) {
+            if (batches[i].category == _category) {
+                result[resultIndex] = batches[i];
+                resultIndex++;
+            }
+        }
+        
+        return result;
+    }
+
 }
