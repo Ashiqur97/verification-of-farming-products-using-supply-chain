@@ -3,7 +3,7 @@ import { useBlockchain } from './BlockchainContext';
 import { ethers } from 'ethers';
 
 const Farmer = ({ active }) => {
-  const { contract, isFarmer, loading: blockchainLoading, error: blockchainError } = useBlockchain();
+  const { contract, isFarmer, loading: blockchainLoading, error: blockchainError, networkId, switchToLocalNetwork } = useBlockchain();
   const [batchId, setBatchId] = useState('');
   const [certificateId, setCertificateId] = useState('');
   const [crop, setCrop] = useState('');
@@ -17,6 +17,9 @@ const Farmer = ({ active }) => {
   const [destination, setDestination] = useState('');
   const [farmerName, setFarmerName] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Check if we're on the correct network (Hardhat local network)
+  const isCorrectNetwork = networkId === 1337 || networkId === 31337;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,6 +90,19 @@ const Farmer = ({ active }) => {
         <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
           <p>{blockchainError || "Contract not initialized. Please make sure MetaMask is connected and the contract is deployed."}</p>
         </div>
+        {!isCorrectNetwork && (
+          <div className="mt-4">
+            <button 
+              onClick={switchToLocalNetwork}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Switch to Local Hardhat Network
+            </button>
+            <p className="text-sm text-gray-600 mt-2">
+              You need to be connected to the local Hardhat network (chainId: 1337) to interact with the contract.
+            </p>
+          </div>
+        )}
       </section>
     );
   }
