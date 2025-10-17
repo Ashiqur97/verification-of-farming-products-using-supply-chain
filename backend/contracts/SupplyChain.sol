@@ -1,45 +1,21 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract SupplyChain is AccessControl {
-    // STATE VARIABLES
     uint256 private _batchIds;
-    
-    // ROLES
+
     bytes32 public constant FARMER_ROLE = keccak256("FARMER_ROLE");
     bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
     bytes32 public constant RETAILER_ROLE = keccak256("RETAILER_ROLE");
     bytes32 public constant CONSUMER_ROLE = keccak256("CONSUMER_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    
-    // AGRICULTURE & FOOD CATEGORIES
-    enum Category {
-        FreshProduce,       // fruits, vegetables, herbs
-        GrainsCereals,      // wheat, rice, corn, oats
-        LivestockMeat,      // cattle, poultry, pork, seafood
-        DairyProducts,      // milk, cheese, yogurt, butter
-        ProcessedFoods,     // packaged goods, beverages, snacks
-        OrganicSpecialty,    // gluten-free, vegan, kosher, halal
-        SeedsAgriculturalInputs, // fertilizers, pesticides, equipment
-        CoffeeTea,          // bean/leaf origin to cup
-        SpicesSeasonings    // spices and seasonings
-    }
-    
-    // BATCH STATUS
-    enum BatchStatus {
-        Created,
-        InTransit,
-        Processed,
-        Packaged,
-        ForSale,
-        Sold,
-        Recalled
-    }
-    
-    // BATCH STRUCT
-    struct Batch {
+
+    enum Category { FreshProduce, GrainsCereals, LivestockMeat, DairyProducts, ProcessedFoods, OrganicSpecialty, SeedsAgriculturalInputs, CoffeeTea, SpicesSeasonings }
+    enum BatchStatus { Created, InTransit, Processed, Packaged, ForSale, Sold, Recalled }
+
+    struct BatchCore {
         uint256 id;
         string batchId;
         string certificateId;
@@ -48,16 +24,20 @@ contract SupplyChain is AccessControl {
         string origin;
         uint256 harvestDate;
         address farmer;
-        address distributor;
-        address retailer;
-        address consumer;
-        uint256 weight;
-        string quality;
         BatchStatus status;
         uint256 createdAt;
         uint256 updatedAt;
-        string storageConditions;
+    }
+
+    struct Logistics {
+        address distributor;
+        address retailer;
+        address consumer;
         string destination;
+        string storageConditions;
+    }
+
+    struct RetailInfo {
         string farmerName;
         string retailerName;
         uint256 packagingDate;
@@ -65,68 +45,38 @@ contract SupplyChain is AccessControl {
         uint256 stockQuantity;
         uint256 sellingPrice;
         bool certificationVerified;
+        uint256 weight;
+        string quality;
     }
-    
-    // MAPPINGS
-    mapping(uint256 => Batch) public batches;
-    mapping(string => uint256) public batchIdToIndex;
-    
-    // EVENTS
-    event BatchCreated(uint256 indexed batchId, address indexed farmer, string batchIdString, Category category);
-    event BatchInTransit(uint256 indexed batchId, address indexed distributor);
-    event BatchProcessed(uint256 indexed batchId, address indexed distributor);
-    event BatchPackaged(uint256 indexed batchId, address indexed retailer);
-    event BatchForSale(uint256 indexed batchId, address indexed retailer);
-    event BatchSold(uint256 indexed batchId, address indexed consumer);
-    event BatchRecalled(uint256 indexed batchId, address indexed initiator, string reason);
-    event PackagingDetailsUpdated(uint256 indexed batchId, uint256 packagingDate, string storageConditions);
-    event RetailDetailsUpdated(uint256 indexed batchId, uint256 arrivalDate, uint256 stockQuantity, uint256 sellingPrice);
-    event CertificationVerified(uint256 indexed batchId, bool verified);
 
-    // CONSTRUCTOR
+    mapping(uint256 => BatchCore) public batchCore;
+    mapping(uint256 => Logistics) public logistics;
+    mapping(uint256 => RetailInfo) public retail;
+    mapping(string => uint256) public batchIdToIndex;
+
+    event BatchCreated(uint256 indexed id, address farmer, string batchId, Category category);
+    event BatchStatusUpdated(uint256 indexed id, BatchStatus status);
+
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ADMIN_ROLE, msg.sender);
     }
-    
-    // ROLE MANAGEMENT FUNCTIONS
-    function addFarmer(address account) public onlyRole(ADMIN_ROLE) {
-        _grantRole(FARMER_ROLE, account);
-    }
 
-    function addDistributor(address account) public onlyRole(ADMIN_ROLE) {
-        _grantRole(DISTRIBUTOR_ROLE, account);
-    }
-
-    function addRetailer(address account) public onlyRole(ADMIN_ROLE) {
-        _grantRole(RETAILER_ROLE, account);
-    }
-
-    function addConsumer(address account) public onlyRole(ADMIN_ROLE) {
-        _grantRole(CONSUMER_ROLE, account);
-    }
-    
-    // CORE SUPPLY CHAIN FUNCTIONS
+   
     function createBatch(
         string memory _batchId,
         string memory _certificateId,
         Category _category,
         string memory _crop,
         string memory _origin,
-        uint256 _harvestDate,
-        string memory _quality,
-        uint256 _weight,
-        string memory _storageConditions,
-        string memory _destination,
-        string memory _farmerName
-    ) public onlyRole(FARMER_ROLE) {
-        require(batchIdToIndex[_batchId] == 0, "Batch ID already exists");
-
+        uint256 _harvestDate
+    ) external onlyRole(FARMER_ROLE) {
+        require(batchIdToIndex[_batchId] == 0, "Exists");
         _batchIds++;
-        uint256 newBatchId = _batchIds;
+        uint256 id = _batchIds;
 
-        batches[newBatchId] = Batch({
-            id: newBatchId,
+        batchCore[id] = BatchCore({
+            id: id,
             batchId: _batchId,
             certificateId: _certificateId,
             category: _category,
@@ -134,188 +84,92 @@ contract SupplyChain is AccessControl {
             origin: _origin,
             harvestDate: _harvestDate,
             farmer: msg.sender,
-            distributor: address(0),
-            retailer: address(0),
-            consumer: address(0),
-            weight: _weight,
-            quality: _quality,
             status: BatchStatus.Created,
             createdAt: block.timestamp,
-            updatedAt: block.timestamp,
-            storageConditions: _storageConditions,
-            destination: _destination,
-            farmerName: _farmerName,
-            retailerName: "",
-            packagingDate: 0,
-            arrivalDate: 0,
-            stockQuantity: 0,
-            sellingPrice: 0,
-            certificationVerified: false
+            updatedAt: block.timestamp
         });
 
-        batchIdToIndex[_batchId] = newBatchId;
-        emit BatchCreated(newBatchId, msg.sender, _batchId, _category);
+        batchIdToIndex[_batchId] = id;
+        emit BatchCreated(id, msg.sender, _batchId, _category);
     }
 
-    function shipBatch(uint256 _batchId, address _distributor) public onlyRole(FARMER_ROLE) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        require(batches[_batchId].status == BatchStatus.Created, "Batch not in created state");
-
-        batches[_batchId].distributor = _distributor;
-        batches[_batchId].status = BatchStatus.InTransit;
-        batches[_batchId].updatedAt = block.timestamp;
-
-        emit BatchInTransit(_batchId, msg.sender);
-    }
-
-    function processBatch(uint256 _batchId) public onlyRole(DISTRIBUTOR_ROLE) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        require(batches[_batchId].status == BatchStatus.InTransit, "Batch not in transit");
-
-        batches[_batchId].status = BatchStatus.Processed;
-        batches[_batchId].updatedAt = block.timestamp;
-
-        emit BatchProcessed(_batchId, msg.sender);
-    }
-
-    function updatePackagingDetails(
-        uint256 _batchId,
-        uint256 _packagingDate,
+    function setLogistics(
+        uint256 _id,
+        string memory _destination,
         string memory _storageConditions
-    ) public onlyRole(DISTRIBUTOR_ROLE) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        require(batches[_batchId].status == BatchStatus.Processed, "Batch not in processed state");
-
-        batches[_batchId].packagingDate = _packagingDate;
-        batches[_batchId].storageConditions = _storageConditions;
-        batches[_batchId].updatedAt = block.timestamp;
-        
-        emit PackagingDetailsUpdated(_batchId, _packagingDate, _storageConditions);
+    ) external onlyRole(FARMER_ROLE) {
+        Logistics storage l = logistics[_id];
+        l.destination = _destination;
+        l.storageConditions = _storageConditions;
+        batchCore[_id].updatedAt = block.timestamp;
     }
 
-    function packageBatch(uint256 _batchId, address _retailer) public onlyRole(DISTRIBUTOR_ROLE) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        require(batches[_batchId].status == BatchStatus.Processed, "Batch not in processed state");
-
-        batches[_batchId].retailer = _retailer;
-        batches[_batchId].status = BatchStatus.Packaged;
-        batches[_batchId].updatedAt = block.timestamp;
-
-        emit BatchPackaged(_batchId, msg.sender);
+    
+    function assignDistributor(uint256 _id, address _distributor) external onlyRole(FARMER_ROLE) {
+        logistics[_id].distributor = _distributor;
+        batchCore[_id].status = BatchStatus.InTransit;
+        batchCore[_id].updatedAt = block.timestamp;
+        emit BatchStatusUpdated(_id, BatchStatus.InTransit);
     }
 
-    function updateRetailDetails(
-        uint256 _batchId,
+    function markProcessed(uint256 _id) external onlyRole(DISTRIBUTOR_ROLE) {
+        batchCore[_id].status = BatchStatus.Processed;
+        batchCore[_id].updatedAt = block.timestamp;
+        emit BatchStatusUpdated(_id, BatchStatus.Processed);
+    }
+
+    
+    function packageBatch(uint256 _id, address _retailer) external onlyRole(DISTRIBUTOR_ROLE) {
+        logistics[_id].retailer = _retailer;
+        batchCore[_id].status = BatchStatus.Packaged;
+        batchCore[_id].updatedAt = block.timestamp;
+        emit BatchStatusUpdated(_id, BatchStatus.Packaged);
+    }
+
+    function updateRetailInfo(
+        uint256 _id,
         uint256 _arrivalDate,
         uint256 _stockQuantity,
         uint256 _sellingPrice,
         string memory _retailerName
-    ) public onlyRole(RETAILER_ROLE) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        require(batches[_batchId].retailer == msg.sender, "Not the designated retailer");
-
-        batches[_batchId].arrivalDate = _arrivalDate;
-        batches[_batchId].stockQuantity = _stockQuantity;
-        batches[_batchId].sellingPrice = _sellingPrice;
-        batches[_batchId].retailerName = _retailerName;
-        batches[_batchId].updatedAt = block.timestamp;
-
-        emit RetailDetailsUpdated(_batchId, _arrivalDate, _stockQuantity, _sellingPrice);
+    ) external onlyRole(RETAILER_ROLE) {
+        RetailInfo storage r = retail[_id];
+        r.arrivalDate = _arrivalDate;
+        r.stockQuantity = _stockQuantity;
+        r.sellingPrice = _sellingPrice;
+        r.retailerName = _retailerName;
+        batchCore[_id].updatedAt = block.timestamp;
     }
 
-  function putForSale(uint256 _batchId) public onlyRole(RETAILER_ROLE) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        require(batches[_batchId].status == BatchStatus.Packaged, "Batch not in packaged state");
-        require(batches[_batchId].retailer == msg.sender, "Not the designated retailer");
-
-        batches[_batchId].status = BatchStatus.ForSale;
-        batches[_batchId].updatedAt = block.timestamp;
-
-        emit BatchForSale(_batchId, msg.sender);
+    function putForSale(uint256 _id) external onlyRole(RETAILER_ROLE) {
+        batchCore[_id].status = BatchStatus.ForSale;
+        batchCore[_id].updatedAt = block.timestamp;
+        emit BatchStatusUpdated(_id, BatchStatus.ForSale);
     }
 
-    function sellBatch(uint256 _batchId, address _consumer) public onlyRole(RETAILER_ROLE) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        require(batches[_batchId].status == BatchStatus.ForSale, "Batch not for sale");
-        require(batches[_batchId].retailer == msg.sender, "Not the designated retailer");
-
-        batches[_batchId].consumer = _consumer;
-        batches[_batchId].status = BatchStatus.Sold;
-        batches[_batchId].updatedAt = block.timestamp;
-
-        emit BatchSold(_batchId, msg.sender);
+    function sell(uint256 _id, address _consumer) external onlyRole(RETAILER_ROLE) {
+        logistics[_id].consumer = _consumer;
+        batchCore[_id].status = BatchStatus.Sold;
+        batchCore[_id].updatedAt = block.timestamp;
+        emit BatchStatusUpdated(_id, BatchStatus.Sold);
     }
 
-     // ADMIN & VERIFICATION FUNCTIONS
-    function verifyCertification(uint256 _batchId, bool _verified) public onlyRole(ADMIN_ROLE) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-
-        batches[_batchId].certificationVerified = _verified;
-        batches[_batchId].updatedAt = block.timestamp;
-
-        emit CertificationVerified(_batchId, _verified);
+    
+    function verifyCertification(uint256 _id, bool _verified) external onlyRole(ADMIN_ROLE) {
+        retail[_id].certificationVerified = _verified;
+        batchCore[_id].updatedAt = block.timestamp;
     }
 
-    function verifyBatch(uint256 _batchId) public view {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
+    
+    function getFullBatch(uint256 _id)
+        external
+        view
+        returns (BatchCore memory, Logistics memory, RetailInfo memory)
+    {
+        return (batchCore[_id], logistics[_id], retail[_id]);
     }
 
-    function recallBatch(uint256 _batchId, string memory _reason) public {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        require(
-            hasRole(FARMER_ROLE, msg.sender) || 
-            hasRole(DISTRIBUTOR_ROLE, msg.sender) || 
-            hasRole(RETAILER_ROLE, msg.sender) || 
-            hasRole(ADMIN_ROLE, msg.sender),
-            "Not authorized to recall"
-        );
-
-        batches[_batchId].status = BatchStatus.Recalled;
-        batches[_batchId].updatedAt = block.timestamp;
-
-        emit BatchRecalled(_batchId, msg.sender, _reason);
-    }
-
-        // QUERY FUNCTIONS
-    function getBatch(uint256 _batchId) public view returns (Batch memory) {
-        require(_batchId > 0 && _batchId <= _batchIds, "Invalid batch ID");
-        return batches[_batchId];
-    }
-
-    function getBatchCount() public view returns (uint256) {
+    function totalBatches() external view returns (uint256) {
         return _batchIds;
     }
-
-    function getBatchByBatchId(string memory _batchId) public view returns (Batch memory) {
-        uint256 index = batchIdToIndex[_batchId];
-        require(index > 0, "Batch not found");
-        return batches[index];
-    }
-    
-    // CATEGORY QUERY FUNCTION
-    function getBatchesByCategory(Category _category) public view returns (Batch[] memory) {
-        uint256 count = 0;
-        
-        // Count matching batches
-        for (uint256 i = 1; i <= _batchIds; i++) {
-            if (batches[i].category == _category) {
-                count++;
-            }
-        }
-        
-        // Create result array
-        Batch[] memory result = new Batch[](count);
-        uint256 resultIndex = 0;
-        
-        // Fill result array
-        for (uint256 i = 1; i <= _batchIds; i++) {
-            if (batches[i].category == _category) {
-                result[resultIndex] = batches[i];
-                resultIndex++;
-            }
-        }
-        
-        return result;
-    }
-
 }

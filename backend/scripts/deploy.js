@@ -1,62 +1,42 @@
-// Import hardhat as CommonJS module in ES module environment
-import pkg from 'hardhat';
-const { ethers } = pkg;
+import hardhat from "hardhat";
+const { ethers } = hardhat;
 
 async function main() {
   console.log("Deploying SupplyChain contract...");
-
-  // Get the contract factory
-  const SupplyChain = await ethers.getContractFactory("SupplyChain");
   
-  // Deploy the contract
-  const supplyChain = await SupplyChain.deploy();
-  await supplyChain.deployed();
-
-  console.log(`SupplyChain contract deployed to: ${supplyChain.address}`);
-
-  // Get signers for role assignment
+  const ContractFactory = await ethers.getContractFactory("SupplyChain");
+  const contract = await ContractFactory.deploy();
+  
+  await contract.deployed();
+  
+  console.log("Contract deployed to:", contract.address);
+  
+  // Get signers for different roles
   const [deployer, farmer, distributor, retailer, consumer] = await ethers.getSigners();
   
-  console.log("Setting up roles...");
+  console.log("Assigning roles...");
+  console.log("Farmer address:", farmer.address);
+  console.log("Distributor address:", distributor.address);
+  console.log("Retailer address:", retailer.address);
+  console.log("Consumer address:", consumer.address);
   
-  // Define role constants (must match the ones in the contract)
-  const ADMIN_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("ADMIN_ROLE"));
-  const FARMER_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("FARMER_ROLE"));
-  const DISTRIBUTOR_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("DISTRIBUTOR_ROLE"));
-  const RETAILER_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("RETAILER_ROLE"));
-  const CONSUMER_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("CONSUMER_ROLE"));
+  // Get role identifiers
+  const FARMER_ROLE = await contract.FARMER_ROLE();
+  const DISTRIBUTOR_ROLE = await contract.DISTRIBUTOR_ROLE();
+  const RETAILER_ROLE = await contract.RETAILER_ROLE();
+  const CONSUMER_ROLE = await contract.CONSUMER_ROLE();
   
-  // Grant roles
-  // Deployer is already admin by default, but we'll set up other roles
-  
-  // Grant FARMER_ROLE to farmer address
-  let tx = await supplyChain.grantRole(FARMER_ROLE, farmer.address);
-  await tx.wait();
-  console.log(`FARMER_ROLE granted to: ${farmer.address}`);
-  
-  // Grant DISTRIBUTOR_ROLE to distributor address
-  tx = await supplyChain.grantRole(DISTRIBUTOR_ROLE, distributor.address);
-  await tx.wait();
-  console.log(`DISTRIBUTOR_ROLE granted to: ${distributor.address}`);
-  
-  // Grant RETAILER_ROLE to retailer address
-  tx = await supplyChain.grantRole(RETAILER_ROLE, retailer.address);
-  await tx.wait();
-  console.log(`RETAILER_ROLE granted to: ${retailer.address}`);
-  
-  // Grant CONSUMER_ROLE to consumer address
-  tx = await supplyChain.grantRole(CONSUMER_ROLE, consumer.address);
-  await tx.wait();
-  console.log(`CONSUMER_ROLE granted to: ${consumer.address}`);
+  // Assign roles
+  await contract.grantRole(FARMER_ROLE, farmer.address);
+  await contract.grantRole(DISTRIBUTOR_ROLE, distributor.address);
+  await contract.grantRole(RETAILER_ROLE, retailer.address);
+  await contract.grantRole(CONSUMER_ROLE, consumer.address);
   
   console.log("All roles assigned successfully!");
-  console.log("Deployment and setup complete!");
+  process.exit(0);
 }
 
-// Execute the deployment
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error("Deployment failed:", error.message);
+  process.exit(1);
+});
