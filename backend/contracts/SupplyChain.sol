@@ -6,15 +6,17 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 contract SupplyChain is AccessControl {
     uint256 private _batchIds;
 
+    
     bytes32 public constant FARMER_ROLE = keccak256("FARMER_ROLE");
     bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
     bytes32 public constant RETAILER_ROLE = keccak256("RETAILER_ROLE");
     bytes32 public constant CONSUMER_ROLE = keccak256("CONSUMER_ROLE");
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
+   
     enum Category { FreshProduce, GrainsCereals, LivestockMeat, DairyProducts, ProcessedFoods, OrganicSpecialty, SeedsAgriculturalInputs, CoffeeTea, SpicesSeasonings }
     enum BatchStatus { Created, InTransit, Processed, Packaged, ForSale, Sold, Recalled }
 
+   
     struct BatchCore {
         uint256 id;
         string batchId;
@@ -29,6 +31,7 @@ contract SupplyChain is AccessControl {
         uint256 updatedAt;
     }
 
+    
     struct Logistics {
         address distributor;
         address retailer;
@@ -37,6 +40,7 @@ contract SupplyChain is AccessControl {
         string storageConditions;
     }
 
+    
     struct RetailInfo {
         string farmerName;
         string retailerName;
@@ -49,20 +53,23 @@ contract SupplyChain is AccessControl {
         string quality;
     }
 
+    
     mapping(uint256 => BatchCore) public batchCore;
     mapping(uint256 => Logistics) public logistics;
     mapping(uint256 => RetailInfo) public retail;
     mapping(string => uint256) public batchIdToIndex;
 
-    event BatchCreated(uint256 indexed id, address farmer, string batchId, Category category);
+   
+    event BatchCreated(uint256 indexed id, address indexed farmer, string batchId, Category category);
     event BatchStatusUpdated(uint256 indexed id, BatchStatus status);
 
+   
     constructor() {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(ADMIN_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender); 
     }
 
-   
+  
+
     function createBatch(
         string memory _batchId,
         string memory _certificateId,
@@ -71,7 +78,8 @@ contract SupplyChain is AccessControl {
         string memory _origin,
         uint256 _harvestDate
     ) external onlyRole(FARMER_ROLE) {
-        require(batchIdToIndex[_batchId] == 0, "Exists");
+        require(batchIdToIndex[_batchId] == 0, "Batch already exists");
+
         _batchIds++;
         uint256 id = _batchIds;
 
@@ -98,33 +106,42 @@ contract SupplyChain is AccessControl {
         string memory _destination,
         string memory _storageConditions
     ) external onlyRole(FARMER_ROLE) {
-        Logistics storage l = logistics[_id];
-        l.destination = _destination;
-        l.storageConditions = _storageConditions;
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
+        logistics[_id].destination = _destination;
+        logistics[_id].storageConditions = _storageConditions;
         batchCore[_id].updatedAt = block.timestamp;
     }
 
-    
     function assignDistributor(uint256 _id, address _distributor) external onlyRole(FARMER_ROLE) {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
+        require(_distributor != address(0), "Invalid distributor");
+
         logistics[_id].distributor = _distributor;
         batchCore[_id].status = BatchStatus.InTransit;
         batchCore[_id].updatedAt = block.timestamp;
         emit BatchStatusUpdated(_id, BatchStatus.InTransit);
     }
 
+    
+
     function markProcessed(uint256 _id) external onlyRole(DISTRIBUTOR_ROLE) {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
         batchCore[_id].status = BatchStatus.Processed;
         batchCore[_id].updatedAt = block.timestamp;
         emit BatchStatusUpdated(_id, BatchStatus.Processed);
     }
 
-    
     function packageBatch(uint256 _id, address _retailer) external onlyRole(DISTRIBUTOR_ROLE) {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
+        require(_retailer != address(0), "Invalid retailer");
+
         logistics[_id].retailer = _retailer;
         batchCore[_id].status = BatchStatus.Packaged;
         batchCore[_id].updatedAt = block.timestamp;
         emit BatchStatusUpdated(_id, BatchStatus.Packaged);
     }
+
+    
 
     function updateRetailInfo(
         uint256 _id,
@@ -133,21 +150,28 @@ contract SupplyChain is AccessControl {
         uint256 _sellingPrice,
         string memory _retailerName
     ) external onlyRole(RETAILER_ROLE) {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
+
         RetailInfo storage r = retail[_id];
         r.arrivalDate = _arrivalDate;
         r.stockQuantity = _stockQuantity;
         r.sellingPrice = _sellingPrice;
         r.retailerName = _retailerName;
+
         batchCore[_id].updatedAt = block.timestamp;
     }
 
     function putForSale(uint256 _id) external onlyRole(RETAILER_ROLE) {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
         batchCore[_id].status = BatchStatus.ForSale;
         batchCore[_id].updatedAt = block.timestamp;
         emit BatchStatusUpdated(_id, BatchStatus.ForSale);
     }
 
     function sell(uint256 _id, address _consumer) external onlyRole(RETAILER_ROLE) {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
+        require(_consumer != address(0), "Invalid consumer");
+
         logistics[_id].consumer = _consumer;
         batchCore[_id].status = BatchStatus.Sold;
         batchCore[_id].updatedAt = block.timestamp;
@@ -155,12 +179,14 @@ contract SupplyChain is AccessControl {
     }
 
     
-    function verifyCertification(uint256 _id, bool _verified) external onlyRole(ADMIN_ROLE) {
+    function verifyCertification(uint256 _id, bool _verified) external onlyRole(RETAILER_ROLE) {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
         retail[_id].certificationVerified = _verified;
         batchCore[_id].updatedAt = block.timestamp;
     }
 
     
+
     function getFullBatch(uint256 _id)
         external
         view
