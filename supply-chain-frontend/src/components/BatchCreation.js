@@ -33,6 +33,16 @@ const BatchCreation = () => {
             );
             await tx.wait();
             setSuccess(true);
+
+            setFormData({
+                batchId: '',
+                certificateId: '',
+                category: 0,
+                crop: '',
+                origin: '',
+                harvestDate: '',
+            });
+            setTimeout(() => setSuccess(false), 3000);
         } catch (error) {
 
         }
