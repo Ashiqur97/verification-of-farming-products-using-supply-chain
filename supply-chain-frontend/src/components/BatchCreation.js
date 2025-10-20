@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { getContract, getCurrentAccount } from '../utils/ethersConfig';
 
 const BatchCreation = () => {
-  // Auto-generate unique batch ID
+
   const generateBatchId = () => `BATCH_${Date.now()}`;
   const generateCertId = () => `CERT_${Math.floor(Math.random() * 10000)}`;
 
@@ -32,8 +32,10 @@ const BatchCreation = () => {
         from: account
       });
 
-      // Convert harvest date to timestamp
+     
       const harvestTimestamp = Math.floor(new Date(formData.harvestDate).getTime() / 1000);
+
+      console.log(harvestTimestamp);
 
       setMessage('⏳ Submitting transaction...');
       
@@ -45,9 +47,10 @@ const BatchCreation = () => {
         formData.origin,
         harvestTimestamp,
         {
-          gasLimit: 500000 // Increase gas limit
+          gasLimit: 500000 
         }
       );
+
       
       setMessage('⏳ Transaction submitted. Waiting for confirmation...');
       console.log('📫 Transaction hash:', tx.hash);
@@ -71,7 +74,7 @@ const BatchCreation = () => {
       }, 3000);
       
     } catch (error) {
-      console.error('❌ Error creating batch:', error);
+      console.error('❌ Error creating batch:', error.message);
       
       if (error.code === -32603) {
         setMessage('❌ Internal error. Try using a different Batch ID.');
