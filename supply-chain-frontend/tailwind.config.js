@@ -6,19 +6,29 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          50: '#f0f9f0',
-          100: '#dcf2dc',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
+          950: '#020617',
+        },
+        accent: {
+          light: '#ffffff',
+          dark: '#000000',
+          gray: '#6b7280'
         }
       },
       animation: {
         'float': 'float 6s ease-in-out infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
         'slide-in': 'slideIn 0.5s ease-out',
+        'pulse-slow': 'pulse 3s ease-in-out infinite',
       },
       keyframes: {
         float: {
@@ -26,8 +36,8 @@ module.exports = {
           '50%': { transform: 'translateY(-10px)' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 5px #22c55e, 0 0 10px #22c55e, 0 0 15px #22c55e' },
-          '100%': { boxShadow: '0 0 10px #22c55e, 0 0 20px #22c55e, 0 0 30px #22c55e' },
+          '0%': { boxShadow: '0 0 5px rgba(100, 116, 139, 0.5), 0 0 10px rgba(100, 116, 139, 0.3), 0 0 15px rgba(100, 116, 139, 0.1)' },
+          '100%': { boxShadow: '0 0 10px rgba(100, 116, 139, 0.8), 0 0 20px rgba(100, 116, 139, 0.5), 0 0 30px rgba(100, 116, 139, 0.3)' },
         },
         slideIn: {
           '0%': { transform: 'translateX(-100%)', opacity: '0' },
