@@ -1,50 +1,183 @@
-export const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
-export const RPC_URL = process.env.REACT_APP_RPC_URL;
+export const CONTRACT_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
 
-// Role constants - these are the actual role hashes from your contract
-export const ROLES = {
-  FARMER: 'df57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e', // This will be updated
-  DISTRIBUTOR: 'de9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0',
-  RETAILER: '59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-  CONSUMER: 'ea6c44ac03bff858b476bba40716402b03e41b8e97e276d1baec7c37d42484a0'
-};
+export const CONTRACT_ABI = [
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "uint256", "name": "id", "type": "uint256"},
+      {"indexed": true, "internalType": "address", "name": "creator", "type": "address"},
+      {"indexed": false, "internalType": "string", "name": "batchId", "type": "string"},
+      {"indexed": false, "internalType": "enum SupplyChain.Category", "name": "category", "type": "uint8"},
+      {"indexed": false, "internalType": "string", "name": "harvestDate", "type": "string"}
+    ],
+    "name": "BatchCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "uint256", "name": "id", "type": "uint256"},
+      {"indexed": false, "internalType": "enum SupplyChain.BatchStatus", "name": "status", "type": "uint8"}
+    ],
+    "name": "BatchStatusUpdated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {"internalType": "string", "name": "_batchId", "type": "string"},
+      {"internalType": "string", "name": "_certificateId", "type": "string"},
+      {"internalType": "enum SupplyChain.Category", "name": "_category", "type": "uint8"},
+      {"internalType": "string", "name": "_crop", "type": "string"},
+      {"internalType": "string", "name": "_origin", "type": "string"},
+      {"internalType": "uint256", "name": "_harvestTimestamp", "type": "uint256"},
+      {"internalType": "string", "name": "_harvestDate", "type": "string"}
+    ],
+    "name": "createBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "_id", "type": "uint256"},
+      {"internalType": "string", "name": "_destination", "type": "string"},
+      {"internalType": "string", "name": "_storageConditions", "type": "string"}
+    ],
+    "name": "setLogistics",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "_id", "type": "uint256"},
+      {"internalType": "enum SupplyChain.BatchStatus", "name": "_status", "type": "uint8"}
+    ],
+    "name": "updateBatchStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "_id", "type": "uint256"},
+      {"internalType": "uint256", "name": "_packagingDate", "type": "uint256"},
+      {"internalType": "uint256", "name": "_arrivalDate", "type": "uint256"},
+      {"internalType": "uint256", "name": "_stockQuantity", "type": "uint256"},
+      {"internalType": "uint256", "name": "_sellingPrice", "type": "uint256"},
+      {"internalType": "bool", "name": "_certificationVerified", "type": "bool"},
+      {"internalType": "uint256", "name": "_weight", "type": "uint256"},
+      {"internalType": "string", "name": "_quality", "type": "string"}
+    ],
+    "name": "updateRetailInfo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "", "type": "uint256"}
+    ],
+    "name": "batchCore",
+    "outputs": [
+      {"internalType": "uint256", "name": "id", "type": "uint256"},
+      {"internalType": "string", "name": "batchId", "type": "string"},
+      {"internalType": "string", "name": "certificateId", "type": "string"},
+      {"internalType": "enum SupplyChain.Category", "name": "category", "type": "uint8"},
+      {"internalType": "string", "name": "crop", "type": "string"},
+      {"internalType": "string", "name": "origin", "type": "string"},
+      {"internalType": "uint256", "name": "harvestTimestamp", "type": "uint256"},
+      {"internalType": "string", "name": "harvestDate", "type": "string"},
+      {"internalType": "address", "name": "creator", "type": "address"},
+      {"internalType": "enum SupplyChain.BatchStatus", "name": "status", "type": "uint8"},
+      {"internalType": "uint256", "name": "createdAt", "type": "uint256"},
+      {"internalType": "uint256", "name": "updatedAt", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "string", "name": "", "type": "string"}
+    ],
+    "name": "batchIdToIndex",
+    "outputs": [
+      {"internalType": "uint256", "name": "", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "_id", "type": "uint256"}
+    ],
+    "name": "getFullBatch",
+    "outputs": [
+      {
+        "components": [
+          {"internalType": "uint256", "name": "id", "type": "uint256"},
+          {"internalType": "string", "name": "batchId", "type": "string"},
+          {"internalType": "string", "name": "certificateId", "type": "string"},
+          {"internalType": "enum SupplyChain.Category", "name": "category", "type": "uint8"},
+          {"internalType": "string", "name": "crop", "type": "string"},
+          {"internalType": "string", "name": "origin", "type": "string"},
+          {"internalType": "uint256", "name": "harvestTimestamp", "type": "uint256"},
+          {"internalType": "string", "name": "harvestDate", "type": "string"},
+          {"internalType": "address", "name": "creator", "type": "address"},
+          {"internalType": "enum SupplyChain.BatchStatus", "name": "status", "type": "uint8"},
+          {"internalType": "uint256", "name": "createdAt", "type": "uint256"},
+          {"internalType": "uint256", "name": "updatedAt", "type": "uint256"}
+        ],
+        "internalType": "struct SupplyChain.BatchCore",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {"internalType": "string", "name": "destination", "type": "string"},
+          {"internalType": "string", "name": "storageConditions", "type": "string"}
+        ],
+        "internalType": "struct SupplyChain.Logistics",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {"internalType": "string", "name": "farmerName", "type": "string"},
+          {"internalType": "string", "name": "retailerName", "type": "string"},
+          {"internalType": "uint256", "name": "packagingDate", "type": "uint256"},
+          {"internalType": "uint256", "name": "arrivalDate", "type": "uint256"},
+          {"internalType": "uint256", "name": "stockQuantity", "type": "uint256"},
+          {"internalType": "uint256", "name": "sellingPrice", "type": "uint256"},
+          {"internalType": "bool", "name": "certificationVerified", "type": "bool"},
+          {"internalType": "uint256", "name": "weight", "type": "uint256"},
+          {"internalType": "string", "name": "quality", "type": "string"}
+        ],
+        "internalType": "struct SupplyChain.RetailInfo",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalBatches",
+    "outputs": [
+      {"internalType": "uint256", "name": "", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
 
-// We'll update the role hashes after getting them from the contract
-export const ROLE_NAMES = {
-  FARMER_ROLE: 'Farmer 🌾',
-  DISTRIBUTOR_ROLE: 'Distributor 🚚', 
-  RETAILER_ROLE: 'Retailer 🏪',
-  CONSUMER_ROLE: 'Consumer 👥',
-  DEFAULT: 'No Role'
-};
+export const CATEGORIES = [
+  "Fresh Produce", "Grains & Cereals", "Livestock & Meat", "Dairy Products",
+  "Processed Foods", "Organic & Specialty", "Seeds & Agricultural Inputs",
+  "Coffee & Tea", "Spices & Seasonings"
+];
 
-export const CATEGORIES = {
-  0: 'Fresh Produce 🥦',
-  1: 'Grains & Cereals 🌾',
-  2: 'Livestock & Meat 🥩',
-  3: 'Dairy Products 🥛',
-  4: 'Processed Foods 🍞',
-  5: 'Organic & Specialty 🌱',
-  6: 'Seeds & Inputs 🌰',
-  7: 'Coffee & Tea ☕',
-  8: 'Spices & Seasonings 🌶️'
-};
-
-export const BATCH_STATUS = {
-  0: { name: 'Created', color: 'bg-blue-500', icon: '📝' },
-  1: { name: 'In Transit', color: 'bg-yellow-500', icon: '🚚' },
-  2: { name: 'Processed', color: 'bg-purple-500', icon: '🏭' },
-  3: { name: 'Packaged', color: 'bg-indigo-500', icon: '📦' },
-  4: { name: 'For Sale', color: 'bg-green-500', icon: '🏷️' },
-  5: { name: 'Sold', color: 'bg-emerald-500', icon: '💰' },
-  6: { name: 'Recalled', color: 'bg-red-500', icon: '⚠️' }
-};
-
-// Test addresses from your deployment
-export const TEST_ADDRESSES = {
-  FARMER: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-  DISTRIBUTOR: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-  RETAILER: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
-  CONSUMER: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
-  ADMIN: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
-};
+export const STATUSES = [
+  "Created", "In Transit", "Processed", "Packaged", "For Sale", "Sold", "Recalled"
+];
