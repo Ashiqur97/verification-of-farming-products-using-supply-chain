@@ -1,5 +1,5 @@
 import React from 'react';
-import { BATCH_STATUS } from '../constants/contract.js';
+import { BATCH_STATUS } from '../constants/contract';
 
 const StatusTimeline = ({ currentStatus }) => {
   return (

@@ -122,3 +122,62 @@ export const getBatchDetails = async (batchId) => {
     return null;
   }
 };
+
+export const updateLogistics = async (batchId, logisticsData) => {
+  const contract = getContract();
+  if (!contract) return false;
+
+  try {
+    const tx = await contract.updateLogistics(
+      batchId,
+      logisticsData.destination || "",
+      logisticsData.storageConditions || "",
+      logisticsData.processor || "",
+      logisticsData.processingDate || ""
+    );
+    
+    await tx.wait();
+    return true;
+  } catch (error) {
+    console.error('Error updating logistics:', error);
+    return false;
+  }
+};
+
+export const updateRetailInfo = async (batchId, retailData) => {
+  const contract = getContract();
+  if (!contract) return false;
+
+  try {
+    const tx = await contract.updateRetailInfo(
+      batchId,
+      retailData.brand || "",
+      retailData.packagingDate || "",
+      retailData.weight || 0,
+      retailData.quality || "",
+      retailData.sellingPrice || 0,
+      retailData.certificationVerified || false,
+      retailData.certifications || ""
+    );
+    
+    await tx.wait();
+    return true;
+  } catch (error) {
+    console.error('Error updating retail info:', error);
+    return false;
+  }
+};
+
+export const updateBatchStatus = async (batchId, status) => {
+  const contract = getContract();
+  if (!contract) return false;
+
+  try {
+    const tx = await contract.updateBatchStatus(batchId, status);
+    await tx.wait();
+    return true;
+  } catch (error) {
+    console.error('Error updating batch status:', error);
+    return false;
+  }
+};

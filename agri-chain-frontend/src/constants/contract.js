@@ -408,6 +408,8 @@ export const CONTRACT_ABI = [
     }
 ];
 
+console.log("Contract Address:", CONTRACT_ABI);
+
 export const CATEGORIES = [
   "FreshProduce", "GrainsCereals", "LivestockMeat", "DairyProducts",
   "ProcessedFoods", "OrganicSpecialty", "SeedsAgriculturalInputs",

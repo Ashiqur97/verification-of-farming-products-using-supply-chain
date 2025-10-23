@@ -3,8 +3,15 @@ import Header from './components/Header';
 import BatchCard from './components/BatchCard';
 import CreateBatchForm from './components/CreateBatchForm';
 import BatchDetails from './components/BatchDetails';
-import { connectWallet, createBatch, getTotalBatches, getBatchDetails } from './utils/blockchain';
-import { CONTRACT_ABI, CONTRACT_ADDRESS, BATCH_STATUS } from './constants/contract.js';
+import { 
+  connectWallet, 
+  createBatch, 
+  getTotalBatches, 
+  getBatchDetails,
+  updateLogistics,
+  updateRetailInfo,
+  updateBatchStatus
+} from './utils/blockchain';
 
 function App() {
   const [account, setAccount] = useState('');
@@ -14,7 +21,9 @@ function App() {
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   useEffect(() => {
-    loadBatches();
+    if (account) {
+      loadBatches();
+    }
   }, [account]);
 
   const handleConnectWallet = async () => {
@@ -56,6 +65,46 @@ function App() {
     setIsLoading(false);
   };
 
+  const handleUpdateLogistics = async (batchId, logisticsData) => {
+    setIsLoading(true);
+    const success = await updateLogistics(batchId, logisticsData);
+    if (success) {
+      await loadBatches();
+      alert('Logistics updated successfully!');
+    } else {
+      alert('Error updating logistics.');
+    }
+    setIsLoading(false);
+  };
+
+  const handleUpdateRetail = async (batchId, retailData) => {
+    setIsLoading(true);
+    const success = await updateRetailInfo(batchId, retailData);
+    if (success) {
+      await loadBatches();
+      alert('Retail info updated successfully!');
+    } else {
+      alert('Error updating retail info.');
+    }
+    setIsLoading(false);
+  };
+
+  const handleUpdateStatus = async (batchId, status) => {
+    setIsLoading(true);
+    const success = await updateBatchStatus(batchId, status);
+    if (success) {
+      await loadBatches();
+      alert('Status updated successfully!');
+    } else {
+      alert('Error updating status.');
+    }
+    setIsLoading(false);
+  };
+
+  const refreshBatchData = async () => {
+    await loadBatches();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Header account={account} onConnectWallet={handleConnectWallet} />
@@ -83,6 +132,10 @@ function App() {
           <BatchDetails 
             batch={selectedBatch} 
             onBack={() => setSelectedBatch(null)}
+            onUpdateLogistics={handleUpdateLogistics}
+            onUpdateRetail={handleUpdateRetail}
+            onUpdateStatus={handleUpdateStatus}
+            onRefresh={refreshBatchData}
           />
         ) : (
           <div className="space-y-8">

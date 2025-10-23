@@ -10,7 +10,7 @@ contract SupplyChain {
         CoffeeTea, SpicesSeasonings 
     }
     
-    enum BatchStatus { Created, InTransit, Processed, Packaged, ForSale, Sold, Recalled }
+    enum BatchStatus { Created, InTransit, Processed, Packaged, ForSale, Sold }
 
     struct BatchCore {
         uint256 id;
@@ -29,26 +29,28 @@ contract SupplyChain {
     struct Logistics {
         string destination;
         string storageConditions;
+        string processor;
+        string processingDate;
     }
 
     struct RetailInfo {
-        string farmerName;
-        string retailerName;
-        uint256 packagingDate;
-        uint256 arrivalDate;
-        uint256 stockQuantity;
-        uint256 sellingPrice;
-        bool certificationVerified;
+        string brand;
+        string packagingDate;
         uint256 weight;
         string quality;
+        uint256 sellingPrice;
+        bool certificationVerified;
+        string certifications;
     }
 
     mapping(uint256 => BatchCore) public batchCore;
     mapping(uint256 => Logistics) public logistics;
     mapping(uint256 => RetailInfo) public retail;
-    mapping(string => uint256) public batchIdToIndex;
 
     event BatchCreated(uint256 indexed id, address indexed creator, string batchId);
+    event BatchStatusUpdated(uint256 indexed id, BatchStatus status);
+    event LogisticsUpdated(uint256 indexed id, string processor);
+    event RetailInfoUpdated(uint256 indexed id, string brand);
 
     function createBatch(
         string memory _batchId,
@@ -60,7 +62,6 @@ contract SupplyChain {
     ) external {
         require(bytes(_batchId).length > 0, "Batch ID required");
         require(bytes(_certificateId).length > 0, "Certificate ID required");
-        require(batchIdToIndex[_batchId] == 0, "Batch ID exists");
 
         _batchIds++;
         uint256 id = _batchIds;
@@ -79,8 +80,66 @@ contract SupplyChain {
             updatedAt: block.timestamp
         });
 
-        batchIdToIndex[_batchId] = id;
         emit BatchCreated(id, msg.sender, _batchId);
+    }
+
+    function updateLogistics(
+        uint256 _id,
+        string memory _destination,
+        string memory _storageConditions,
+        string memory _processor,
+        string memory _processingDate
+    ) external {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
+        
+        logistics[_id] = Logistics({
+            destination: _destination,
+            storageConditions: _storageConditions,
+            processor: _processor,
+            processingDate: _processingDate
+        });
+
+        batchCore[_id].status = BatchStatus.InTransit;
+        batchCore[_id].updatedAt = block.timestamp;
+        
+        emit LogisticsUpdated(_id, _processor);
+        emit BatchStatusUpdated(_id, BatchStatus.InTransit);
+    }
+
+    function updateRetailInfo(
+        uint256 _id,
+        string memory _brand,
+        string memory _packagingDate,
+        uint256 _weight,
+        string memory _quality,
+        uint256 _sellingPrice,
+        bool _certificationVerified,
+        string memory _certifications
+    ) external {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
+        
+        retail[_id] = RetailInfo({
+            brand: _brand,
+            packagingDate: _packagingDate,
+            weight: _weight,
+            quality: _quality,
+            sellingPrice: _sellingPrice,
+            certificationVerified: _certificationVerified,
+            certifications: _certifications
+        });
+
+        batchCore[_id].status = BatchStatus.Packaged;
+        batchCore[_id].updatedAt = block.timestamp;
+        
+        emit RetailInfoUpdated(_id, _brand);
+        emit BatchStatusUpdated(_id, BatchStatus.Packaged);
+    }
+
+    function updateBatchStatus(uint256 _id, BatchStatus _status) external {
+        require(_id > 0 && _id <= _batchIds, "Invalid batch ID");
+        batchCore[_id].status = _status;
+        batchCore[_id].updatedAt = block.timestamp;
+        emit BatchStatusUpdated(_id, _status);
     }
 
     function getFullBatch(uint256 _id) external view returns (

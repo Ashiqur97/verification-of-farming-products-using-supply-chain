@@ -11,6 +11,8 @@ const CreateBatchForm = ({ onCreateBatch, isLoading }) => {
     harvestDate: ''
   });
 
+  console.log("Rendering CreateBatchForm with formData:", CreateBatchForm);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onCreateBatch(formData);
