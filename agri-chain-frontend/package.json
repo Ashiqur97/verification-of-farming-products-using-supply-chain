@@ -2,7 +2,8 @@
   "name": "agri-chain-frontend",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
+   "scripts": {
+    "vercel-build": "npm install && react-scripts build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
